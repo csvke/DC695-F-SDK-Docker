@@ -112,6 +112,24 @@ docker compose run --rm yocto
 SDK_PATH=/path/to/rk3576_sdk docker compose run --rm debian
 ```
 
+## Build Artifacts
+
+All paths are relative to `/workspace` (SDK root inside the container), which maps directly to your host filesystem — nothing is trapped in the container.
+
+| Target | Intermediate output | Final images |
+|---|---|---|
+| **Buildroot** | `buildroot/output/<board>/` | `output/firmware/` → symlinked into `rockdev/` |
+| **Debian** | `debian/binary/` (chroot tree) | `debian/linaro-rootfs.img` → packed into `output/firmware/` |
+| **Ubuntu** | `ubuntu/binary/` (chroot tree) | rootfs image in `ubuntu/` → packed into `output/firmware/` |
+| **Yocto** | `yocto/build/tmp/deploy/images/<machine>/` | BitBake writes directly here |
+
+**Final flashable firmware** (Buildroot / Debian / Ubuntu):
+- `output/firmware/` — individual partition images (`boot.img`, `rootfs.img`, `uboot.img`, etc.)
+- `rockdev/` — symlinks to the above, consumed by `rkflash.sh` and `update_tool`
+- `output/firmware/update.img` — packed single-file OTA image
+
+> **Note:** Debian and Ubuntu builds create root-owned `binary/` chroot directories on the host. On Mac/Windows Docker Desktop, use `docker exec` to `rm -rf` them from inside the container rather than from the host.
+
 ## Build Instructions (inside container)
 
 ### Buildroot
