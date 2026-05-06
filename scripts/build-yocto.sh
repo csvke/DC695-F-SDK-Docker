@@ -18,10 +18,12 @@ run_build() {
 
     # Redirect TMPDIR to a container-local path to avoid 'cp -p' ownership errors
     # when BitBake's do_unpack tries to chown files on the bind-mounted volume.
+    # NOTE: oe-init-build-env changed CWD to /workspace/yocto/build, so local.conf
+    # is at conf/local.conf (not build/conf/local.conf).
     YOCTO_TMPDIR="/yocto-tmp"
     mkdir -p "$YOCTO_TMPDIR"
-    grep -q "^TMPDIR" build/conf/local.conf 2>/dev/null || \
-        echo "TMPDIR = \"$YOCTO_TMPDIR\"" >> build/conf/local.conf
+    grep -q "^TMPDIR" conf/local.conf 2>/dev/null || \
+        echo "TMPDIR = \"$YOCTO_TMPDIR\"" >> conf/local.conf
     echo "  TMPDIR -> $YOCTO_TMPDIR (container-local, avoids chown errors)"
 
     echo "[2/3] Running BitBake (core-image-minimal)..."
