@@ -18,10 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils \
     debianutils \
     iputils-ping \
-    libegl1-mesa \
-    libsdl1.2-dev \
+    libegl1 \
+    libsdl2-dev \
     libssl-dev \
-    mesa-common-dev \
+    libgles2-mesa-dev \
     zstd \
     liblz4-tool \
     # repo tool deps
