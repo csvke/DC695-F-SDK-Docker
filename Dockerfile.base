@@ -64,6 +64,10 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
+# Copy build scripts into the image (used by Makefile build targets via tmux)
+COPY scripts/ /opt/dc695f-scripts/
+RUN chmod +x /opt/dc695f-scripts/*.sh
+
 # Create workspace directory
 WORKDIR /workspace
 
