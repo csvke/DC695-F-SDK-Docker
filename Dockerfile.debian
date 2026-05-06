@@ -35,6 +35,11 @@ RUN if [ ! -e "/usr/share/debootstrap/scripts/bookworm" ]; then \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Workaround: SDK mk-base-debian.sh passes '--distribution bookwrom' (typo).
+# Create the alias symlink at image build time so debootstrap can find the suite.
+RUN ln -sf /usr/share/debootstrap/scripts/bookworm \
+           /usr/share/debootstrap/scripts/bookwrom
+
 # Run as root (required: chroot, binfmt_misc, mke2fs -d need real root)
 USER 0
 

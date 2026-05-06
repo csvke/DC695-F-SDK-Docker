@@ -18,11 +18,11 @@ run_build() {
     sudo apt-get install -f -y
 
     echo "[2/4] Building base Debian system from Linaro..."
-    # Workaround: SDK mk-base-debian.sh passes '--distribution bookwrom' (typo).
-    # Debootstrap has no 'bookwrom' script, so we alias it to 'bookworm'.
-    if [ ! -f /usr/share/debootstrap/scripts/bookwrom ]; then
-        sudo ln -s /usr/share/debootstrap/scripts/bookworm \
-                   /usr/share/debootstrap/scripts/bookwrom
+    # Patch SDK typo: 'bookwrom' -> 'bookworm' in live-build configure script
+    CONFIGURE="ubuntu-build-service/bookworm-base-arm64/configure"
+    if grep -q 'bookwrom' "$CONFIGURE" 2>/dev/null; then
+        sed -i 's/--distribution bookwrom/--distribution bookworm/g' "$CONFIGURE"
+        echo "  (patched $CONFIGURE: bookwrom -> bookworm)"
     fi
     RELEASE=bookworm TARGET=base ARCH=arm64 ./mk-base-debian.sh
 

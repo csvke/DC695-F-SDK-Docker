@@ -13,15 +13,27 @@ run_build() {
     echo "DC695-F Yocto Build"
     echo "=========================================="
 
-    echo "[1/2] Initialising BitBake build environment..."
+    echo "[1/3] Initialising BitBake build environment..."
     source oe-init-build-env build
 
-    echo "[2/2] Running BitBake (core-image-minimal)..."
+    # Redirect TMPDIR to a container-local path to avoid 'cp -p' ownership errors
+    # when BitBake's do_unpack tries to chown files on the bind-mounted volume.
+    YOCTO_TMPDIR="/yocto-tmp"
+    mkdir -p "$YOCTO_TMPDIR"
+    grep -q "^TMPDIR" build/conf/local.conf 2>/dev/null || \
+        echo "TMPDIR = \"$YOCTO_TMPDIR\"" >> build/conf/local.conf
+    echo "  TMPDIR -> $YOCTO_TMPDIR (container-local, avoids chown errors)"
+
+    echo "[2/3] Running BitBake (core-image-minimal)..."
     bitbake core-image-minimal
+
+    echo "[3/3] Copying deploy artifacts to mounted volume..."
+    mkdir -p /workspace/yocto/build/deploy
+    cp -r "$YOCTO_TMPDIR/deploy/"* /workspace/yocto/build/deploy/ 2>/dev/null || true
 
     echo ""
     echo "Build complete!"
-    echo "Images: /workspace/yocto/build/tmp/deploy/images/"
+    echo "Images: /workspace/yocto/build/deploy/images/"
 }
 
 if [ -t 1 ]; then
