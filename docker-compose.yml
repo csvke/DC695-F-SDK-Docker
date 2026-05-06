@@ -1,0 +1,86 @@
+services:
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+    image: dc695f-base:${IMAGE_TAG:-latest}
+
+  buildroot:
+    build:
+      context: .
+      dockerfile: Dockerfile.buildroot
+    image: dc695f-buildroot:${IMAGE_TAG:-latest}
+    container_name: dc695f-buildroot
+    privileged: true
+    user: "0:0"
+    volumes:
+      - ${SDK_PATH:-../SDK/rk3576_linux6.1_sdk_stan_rkr6_250121}:/workspace:rw
+      - ${HOST_DC695F_PATH:-..}:/workspace-host:rw
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ=Asia/Hong_Kong
+      - LANG=en_US.UTF-8
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '8'
+    #       memory: 16G
+
+  debian:
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+    image: dc695f-debian:${IMAGE_TAG:-latest}
+    container_name: dc695f-debian
+    privileged: true
+    user: "0:0"
+    volumes:
+      - ${SDK_PATH:-../SDK/rk3576_linux6.1_sdk_stan_rkr6_250121}:/workspace:rw
+      - ${HOST_DC695F_PATH:-..}:/workspace-host:rw
+    working_dir: /workspace/debian
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ=Asia/Hong_Kong
+      - LANG=en_US.UTF-8
+
+  ubuntu:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    image: dc695f-ubuntu:${IMAGE_TAG:-latest}
+    container_name: dc695f-ubuntu
+    privileged: true
+    user: "0:0"
+    volumes:
+      - ${SDK_PATH:-../SDK/rk3576_linux6.1_sdk_stan_rkr6_250121}:/workspace:rw
+      - ${HOST_DC695F_PATH:-..}:/workspace-host:rw
+    working_dir: /workspace/ubuntu
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ=Asia/Hong_Kong
+      - LANG=en_US.UTF-8
+
+  yocto:
+    build:
+      context: .
+      dockerfile: Dockerfile.yocto
+    image: dc695f-yocto:${IMAGE_TAG:-latest}
+    container_name: dc695f-yocto
+    privileged: true
+    user: "0:0"
+    volumes:
+      - ${SDK_PATH:-../SDK/rk3576_linux6.1_sdk_stan_rkr6_250121}:/workspace:rw
+      - ${HOST_DC695F_PATH:-..}:/workspace-host:rw
+    working_dir: /workspace/yocto
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ=Asia/Hong_Kong
+      - LANG=en_US.UTF-8

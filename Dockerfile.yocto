@@ -1,0 +1,62 @@
+FROM dc695f-base:latest
+
+LABEL maintainer="frankie.yuen@me.com"
+LABEL description="Yocto (Poky + meta-rockchip) build environment for Rockchip RK3576 DC695-F SDK"
+LABEL version="1.0"
+
+# Yocto / BitBake host dependencies (as per Yocto Project mega-manual)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-pexpect \
+    python3-jinja2 \
+    python3-git \
+    python3-subunit \
+    # Build tools required by BitBake
+    chrpath \
+    diffstat \
+    socat \
+    xz-utils \
+    debianutils \
+    iputils-ping \
+    libegl1-mesa \
+    libsdl1.2-dev \
+    libssl-dev \
+    mesa-common-dev \
+    zstd \
+    liblz4-tool \
+    # repo tool deps
+    python-is-python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Google repo tool
+RUN curl -o /usr/local/bin/repo \
+    https://storage.googleapis.com/git-repo-downloads/repo && \
+    chmod +x /usr/local/bin/repo
+
+# Yocto requires a UTF-8 locale — already set in base, confirm here
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Run as root
+USER 0
+
+WORKDIR /workspace/yocto
+
+CMD ["bash", "-c", "\
+    echo '========================================' && \
+    echo 'DC695-F Yocto Build Environment' && \
+    echo '========================================' && \
+    echo 'GCC:     '$(gcc --version | head -1) && \
+    echo 'Python:  '$(python3 --version) && \
+    echo 'chrpath: '$(chrpath --version 2>&1 | head -1) && \
+    echo '========================================' && \
+    echo 'SDK is mounted at:         /workspace' && \
+    echo 'Host workspace mounted at: /workspace-host' && \
+    echo '' && \
+    echo 'Quick Start:' && \
+    echo '  cd /workspace/yocto' && \
+    echo '  source oe-init-build-env build' && \
+    echo '  bitbake core-image-minimal' && \
+    echo '========================================' && \
+    exec bash"]

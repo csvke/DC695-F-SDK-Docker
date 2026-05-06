@@ -1,0 +1,45 @@
+FROM dc695f-base:latest
+
+LABEL maintainer="frankie.yuen@me.com"
+LABEL description="Buildroot build environment for Rockchip RK3576 DC695-F SDK"
+LABEL version="1.0"
+
+# Additional packages needed by Buildroot
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libncurses5-dev \
+    libncursesw5-dev \
+    patch \
+    cvs \
+    subversion \
+    mercurial \
+    swig \
+    automake \
+    autoconf \
+    libtool \
+    texinfo \
+    help2man \
+    diffutils \
+    diffstat \
+    chrpath \
+    && rm -rf /var/lib/apt/lists/*
+
+# Run as root (avoids fakeroot semaphore issues in Docker)
+USER 0
+
+WORKDIR /workspace
+
+CMD ["bash", "-c", "\
+    echo '========================================' && \
+    echo 'DC695-F Buildroot Build Environment' && \
+    echo '========================================' && \
+    echo 'GCC:    '$(gcc --version | head -1) && \
+    echo 'Python: '$(python3 --version) && \
+    echo '========================================' && \
+    echo 'SDK is mounted at:         /workspace' && \
+    echo 'Host workspace mounted at: /workspace-host' && \
+    echo '' && \
+    echo 'Quick Start:' && \
+    echo '  source buildroot/envsetup.sh' && \
+    echo '  make' && \
+    echo '========================================' && \
+    exec bash"]

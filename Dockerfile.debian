@@ -1,0 +1,63 @@
+FROM dc695f-base:latest
+
+LABEL maintainer="frankie.yuen@me.com"
+LABEL description="Debian (Bookworm) rootfs build environment for Rockchip RK3576 DC695-F SDK"
+LABEL version="1.0"
+
+# Debian rootfs build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    qemu-user-static \
+    binfmt-support \
+    debootstrap \
+    e2fsprogs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ubuntu-build-service packages from the SDK's bundled debs
+# These are installed at container startup from the mounted SDK volume.
+# Alternatively, install live-build from source (pinned version) to support bookworm.
+RUN apt-get update && apt-get remove -y live-build 2>/dev/null || true && \
+    git clone https://salsa.debian.org/live-team/live-build.git \
+        --depth 1 -b debian/1%20230131 /tmp/live-build && \
+    cd /tmp/live-build && \
+    rm -rf manpages/po/ && \
+    make install -j$(nproc) && \
+    rm -rf /tmp/live-build && \
+    rm -rf /var/lib/apt/lists/*
+
+# Ensure bookworm debootstrap script is present
+RUN if [ ! -e "/usr/share/debootstrap/scripts/bookworm" ]; then \
+        apt-get update && apt-get remove -y debootstrap && \
+        git clone https://salsa.debian.org/installer-team/debootstrap.git \
+            --depth 1 -b debian/1.0.123+deb11u2 /tmp/debootstrap && \
+        cd /tmp/debootstrap && \
+        make install -j$(nproc) && \
+        rm -rf /tmp/debootstrap && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Run as root (required: chroot, binfmt_misc, mke2fs -d need real root)
+USER 0
+
+WORKDIR /workspace/debian
+
+CMD ["bash", "-c", "\
+    echo '========================================' && \
+    echo 'DC695-F Debian (Bookworm) Build Environment' && \
+    echo '========================================' && \
+    echo 'GCC:              '$(gcc --version | head -1) && \
+    echo 'qemu-user-static: '$(dpkg -s qemu-user-static | grep Version) && \
+    echo 'live-build:       '$(lb --version 2>&1 | head -1) && \
+    echo 'debootstrap:      '$(debootstrap --version) && \
+    echo '========================================' && \
+    echo 'SDK is mounted at:         /workspace' && \
+    echo 'Host workspace mounted at: /workspace-host' && \
+    echo '' && \
+    echo 'Quick Start (arm64):' && \
+    echo '  cd /workspace/debian' && \
+    echo '  sudo dpkg -i ubuntu-build-service/packages/*' && \
+    echo '  sudo apt-get install -f' && \
+    echo '  RELEASE=bookworm TARGET=base ARCH=arm64 ./mk-base-debian.sh' && \
+    echo '  RELEASE=bookworm ARCH=arm64 ./mk-rootfs.sh' && \
+    echo '  ./mk-image.sh' && \
+    echo '========================================' && \
+    exec bash"]

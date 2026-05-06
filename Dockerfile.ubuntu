@@ -1,0 +1,33 @@
+FROM dc695f-base:latest
+
+LABEL maintainer="frankie.yuen@me.com"
+LABEL description="Ubuntu (Jammy 22.04) rootfs build environment for Rockchip RK3576 DC695-F SDK"
+LABEL version="1.0"
+
+# Ubuntu rootfs build dependencies (lighter than Debian — no live-build needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    qemu-user-static \
+    binfmt-support \
+    e2fsprogs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Run as root (required: mount loop, chroot, mke2fs -d)
+USER 0
+
+WORKDIR /workspace/ubuntu
+
+CMD ["bash", "-c", "\
+    echo '========================================' && \
+    echo 'DC695-F Ubuntu (Jammy 22.04) Build Environment' && \
+    echo '========================================' && \
+    echo 'GCC:              '$(gcc --version | head -1) && \
+    echo 'qemu-user-static: '$(dpkg -s qemu-user-static | grep Version) && \
+    echo '========================================' && \
+    echo 'SDK is mounted at:         /workspace' && \
+    echo 'Host workspace mounted at: /workspace-host' && \
+    echo '' && \
+    echo 'Quick Start (arm64):' && \
+    echo '  cd /workspace/ubuntu' && \
+    echo '  VERSION=debug ARCH=arm64 ./mk-rootfs.sh jammy' && \
+    echo '========================================' && \
+    exec bash"]
