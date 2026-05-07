@@ -24,6 +24,13 @@ run_build() {
     mkdir -p "$YOCTO_TMPDIR"
     grep -q "^TMPDIR" conf/local.conf 2>/dev/null || \
         echo "TMPDIR = \"$YOCTO_TMPDIR\"" >> conf/local.conf
+    # Disable uninative: the uninative cp binary fails with EINVAL when preserving
+    # ownership on Docker overlay2. System tools in the container are sufficient.
+    grep -q "^INHERIT:remove.*uninative" conf/local.conf 2>/dev/null || \
+        echo 'INHERIT:remove = "uninative"' >> conf/local.conf
+    # Prevent pseudo from intercepting operations on the bind-mounted workspace.
+    grep -q "^PSEUDO_IGNORE_PATHS" conf/local.conf 2>/dev/null || \
+        echo 'PSEUDO_IGNORE_PATHS .= ":/workspace"' >> conf/local.conf
     echo "  TMPDIR -> $YOCTO_TMPDIR (container-local, avoids chown errors)"
 
     echo "[2/3] Running BitBake (core-image-minimal)..."
